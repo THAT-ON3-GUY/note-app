@@ -6,7 +6,7 @@ NoteApp is a console notetaking application built around connecting notes to eac
 
 My purpose for writing this software was to learn how to structure a Java program, how to store and reload data reliably as plain files, and how to handle user input and file problems without crashing. I'm most proud of the fact that NoteApp uses native applications to open file types that the user imports into their collections. I felt that this was an intuitive feature and was surprised to learn it wasn't as difficult to implement as I thought it would be.
 
-[Software Demo Video](http://youtube.link.goes.here)
+[Software Demo Video](https://youtu.be/dH8py9unEQg)
 
 # Development Environment
 
