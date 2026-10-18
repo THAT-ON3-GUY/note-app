@@ -1,0 +1,16 @@
+# Compiled classes
+bin/
+*.class
+
+# VS Code: keep settings.json (it defines the src/bin layout), ignore everything else
+.vscode/*
+!.vscode/settings.json
+
+# Other editors
+.idea/
+*.iml
+
+# OS clutter
+.DS_Store
+Thumbs.db
+desktop.ini

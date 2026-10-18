@@ -1,0 +1,171 @@
+classDiagram
+    direction TB
+
+    class NoteApp {
+        +main(String[] args)$ void
+    }
+
+    class Menu {
+        -Scanner scanner
+        -Library library
+        -FileImporter importer
+        -CollectionArchiver archiver
+        +Menu(Library library)
+        +run() void
+        -showMainMenu() void
+        -showCollectionMenu(NoteCollection collection) void
+        -showNoteMenu(Note note, NoteCollection collection) void
+        -printLinks(Note note, NoteCollection collection) List~CollectionItem~
+        -openItem(CollectionItem item, NoteCollection collection) void
+        -printHeader(String title) void
+        -collectionNames(List~NoteCollection~ collections) List~String~
+        -itemLabel(CollectionItem item) String
+        -itemLabels(List~CollectionItem~ items) List~String~
+        -uniqueIgnoringCase(Iterable~String~ titles) List~String~
+        -prompt(String message) String
+        -promptNumber(String message, int max) int
+        -confirm(String question) boolean
+        -readMultiLine(String instructions) String
+        -printNumbered(List~String~ names, String emptyMessage) void
+        -readPath(String message) Path
+    }
+
+    class Library {
+        -Path rootFolder
+        -Map~String,NoteCollection~ collections
+        +Library(Path rootFolder)
+        +loadCollections() List~String~
+        +createCollection(String name) NoteCollection
+        +getCollection(String name) Optional~NoteCollection~
+        +deleteCollection(String name) boolean
+        +listCollections() List~NoteCollection~
+    }
+
+    class NoteCollection {
+        +String NOTE_EXTENSION$
+        -String name
+        -Path folder
+        -List~CollectionItem~ items
+        +NoteCollection(String name, Path folder)
+        +getName() String
+        +getFolder() Path
+        +getItems() List~CollectionItem~
+        +addNote(String title) Note
+        +addItem(CollectionItem item) void
+        +removeItem(String title) boolean
+        +findByTitle(String title) Optional~CollectionItem~
+        +getNotes() List~Note~
+        +getAttachments() List~Attachment~
+        +resolveReferences(Note note) List~CollectionItem~
+        +getMissingReferences(Note note) List~String~
+        +getBacklinks(CollectionItem target) List~Note~
+        +save() void
+        +load() List~String~
+    }
+
+    class CollectionItem {
+        <<abstract>>
+        #String title
+        #Path file
+        #LocalDateTime createdAt
+        #CollectionItem(String title, Path file, LocalDateTime createdAt)
+        +getTitle() String
+        +getFile() Path
+        +getCreatedAt() LocalDateTime
+        +open()* void
+    }
+
+    class Note {
+        -String body
+        -Set~String~ additionalRefs
+        +Note(String title, Path file, LocalDateTime createdAt, List~String~ refs)
+        +Note(String title, Path file, LocalDateTime createdAt)
+        +getBody() String
+        +setBody(String body) void
+        +addReference(CollectionItem target) void
+        +removeReference(String title) void
+        +getReferences() Set~String~
+        +getAdditionalRefs() Set~String~
+        +open() void
+    }
+
+    class Attachment {
+        -FileType type
+        +Attachment(String title, Path file, LocalDateTime createdAt)
+        +getType() FileType
+        +open() void
+    }
+
+    class FileType {
+        <<enumeration>>
+        IMAGE
+        AUDIO
+        VIDEO
+        DOCUMENT
+        OTHER
+        -List~String~ extensions
+        +fromFileName(String fileName)$ FileType
+    }
+
+    class ReferenceParser {
+        -Pattern LINK_PATTERN$
+        -ReferenceParser()
+        +extractReferences(String body)$ Set~String~
+        +deleteReferences(String body, String delete)$ String
+    }
+
+    class NoteStorage {
+        -String REFS_PREFIX$
+        -String ILLEGAL_NAME_CHARS$
+        -NoteStorage()
+        +createFolder(Path folder)$ Path
+        +writeNote(Note note)$ void
+        +readNote(Path file)$ Note
+        +readAttachment(Path file)$ Attachment
+        -readCreationTime(Path file)$ LocalDateTime
+        +listFiles(Path folder)$ List~Path~
+        +validateName(String name)$ String
+        +delete(Path path)$ void
+    }
+
+    class FileImporter {
+        +importInto(NoteCollection collection, Path source) CollectionItem
+        -importAsNote(NoteCollection collection, Path source) Note
+        -importAsAttachment(NoteCollection collection, Path source) Attachment
+        -copyIntoFolder(Path source, Path folder) Path
+    }
+
+    class ExternalOpener {
+        -ExternalOpener()
+        +isSupported()$ boolean
+        +open(Path file)$ void
+    }
+
+    class CollectionArchiver {
+        -String ZIP_EXTENSION$
+        +zip(NoteCollection collection, Path destinationFolder) Path
+        +unzip(Path zipFile, Library library) NoteCollection
+        -safeTarget(Path folder, String entryName) Path
+    }
+
+    NoteApp ..> Library : creates and loads
+    NoteApp ..> Menu : creates
+    Menu --> Library : uses
+    Menu --> FileImporter : uses
+    Menu --> CollectionArchiver : uses
+    Library "1" *-- "0..*" NoteCollection : contains
+    NoteCollection "1" *-- "0..*" CollectionItem : contains
+    CollectionItem <|-- Note
+    CollectionItem <|-- Attachment
+    Attachment --> FileType : has
+    Note "0..*" --> "0..*" CollectionItem : references by title
+    Note ..> ReferenceParser : finds and unlinks links with
+    Attachment ..> ExternalOpener : opens with
+    NoteCollection ..> NoteStorage : saves, loads, validates with
+    Library ..> NoteStorage : reads folders, validates with
+    NoteStorage ..> Note : builds
+    NoteStorage ..> Attachment : builds
+    FileImporter ..> NoteCollection : adds items to
+    FileImporter ..> Attachment : creates
+    CollectionArchiver ..> NoteCollection : zips
+    CollectionArchiver ..> Library : unzips into
